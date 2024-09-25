@@ -21,13 +21,17 @@ load_dotenv()
 DOCUMENTS_PATH = os.getenv('DOCUMENTS_PATH', './documents')
 POSTGRESQL_URL = os.getenv('POSTGRESQL_URL')
 THREADS_COUNT = int(os.getenv('THREADS_COUNT', '4'))
+CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', '500'))
 
 
 # Adaptar numpy array para PostgreSQL
 def addapt_numpy_array(numpy_array):
-    return AsIs(repr(numpy_array.tolist()))
+    return AsIs(f"ARRAY{numpy_array.tolist()}")
 
+def addapt_numpy_float32(numpy_float32):
+    return AsIs(numpy_float32)
 
+register_adapter(np.float32, addapt_numpy_float32)
 register_adapter(np.ndarray, addapt_numpy_array)
 
 
@@ -61,24 +65,30 @@ def extract_text(file_path):
         return None
 
 
-def generate_embedding(text):
-    return model.encode(text)
+def generate_embeddings(text):
+    # Divide o texto em chunks
+    chunks = [text[i:i+CHUNK_SIZE] for i in range(0, len(text), CHUNK_SIZE)]
+    embeddings = model.encode(chunks)
+    return embeddings
 
 
-def store_embedding(file_path, embedding):
+def store_embeddings(file_path, embeddings):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             try:
-                cur.execute("""
-                    INSERT INTO document_embeddings (file_path, embedding)
-                    VALUES (%s, %s::vector)
-                    ON CONFLICT (file_path) DO UPDATE
-                    SET embedding = EXCLUDED.embedding
-                """, (file_path, embedding))
+                for i, embedding in enumerate(embeddings):
+                    cur.execute("""
+                        INSERT INTO document_embeddings (file_path, chunk_index, embedding)
+                        VALUES (%s, %s, %s::float4[])
+                        ON CONFLICT (file_path, chunk_index) DO UPDATE
+                        SET embedding = EXCLUDED.embedding
+                    """, (file_path, i, embedding))
                 conn.commit()
-                print(f"Embedding armazenado com sucesso para {file_path}")
+                print(f"Embeddings armazenados com sucesso para {file_path}")
             except Exception as e:
-                print(f"Erro ao armazenar embedding para {file_path}: {e}")
+                print(f"Erro ao armazenar embeddings para {file_path}: {e}")
+                print(f"Embedding causador do erro: {embedding}")
+                print(f"SQL gerado: {cur.mogrify('INSERT INTO document_embeddings (file_path, chunk_index, embedding) VALUES (%s, %s, %s::float4[])', (file_path, i, embedding))}")
                 conn.rollback()
 
 
@@ -89,13 +99,15 @@ def process_file(file_path):
             return
         text = extract_text(file_path)
         if text:
-            embedding = generate_embedding(text)
-            store_embedding(file_path, embedding)
+            embeddings = generate_embeddings(text)
+            store_embeddings(file_path, embeddings)
+            update_processed_files(file_path)
             print(f'Arquivo processado: {file_path}')
         else:
             print(f'Não foi possível extrair texto de {file_path}.')
     except Exception as e:
         print(f'Erro ao processar {file_path}: {e}')
+
 
 
 def calculate_file_hash(file_path):
@@ -145,8 +157,10 @@ def initialize_database():
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS document_embeddings (
                     id SERIAL PRIMARY KEY,
-                    file_path TEXT UNIQUE,
-                    embedding vector(384)
+                    file_path TEXT,
+                    chunk_index INTEGER,
+                    embedding vector(384),
+                    UNIQUE(file_path, chunk_index)
                 )
             """)
 

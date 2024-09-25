@@ -22,6 +22,66 @@ EMBEDDINGS_PATH = os.getenv('EMBEDDINGS_PATH', './embeddings')
 THREADS_COUNT = int(os.getenv('THREADS_COUNT', '4'))
 POSTGRESQL_URL = os.getenv('POSTGRESQL_URL')
 
+
+def store_embedding(file_path, embedding):
+    dimension = embedding.shape[0]
+    if not os.path.exists(EMBEDDINGS_PATH):
+        try:
+            os.makedirs(EMBEDDINGS_PATH)
+            print(f"Diretório criado: {EMBEDDINGS_PATH}")
+        except Exception as e:
+            print(f"Erro ao criar diretório {EMBEDDINGS_PATH}: {e}")
+            return
+
+    index_path = os.path.join(EMBEDDINGS_PATH, 'embeddings.index')
+
+    try:
+        if os.path.exists(index_path):
+            index = faiss.read_index(index_path)
+            print(f"Índice existente carregado de {index_path}")
+        else:
+            index = faiss.IndexFlatL2(dimension)
+            print(f"Novo índice criado com dimensão {dimension}")
+
+        index.add(embedding.reshape(1, -1))
+
+        try:
+            faiss.write_index(index, index_path)
+            print(f"Índice salvo em {index_path}")
+        except Exception as e:
+            print(f"Erro ao escrever o índice em {index_path}: {e}")
+            print(f"Permissões do diretório: {os.stat(EMBEDDINGS_PATH)}")
+
+    except Exception as e:
+        print(f"Erro ao manipular o índice FAISS: {e}")
+
+    update_processed_files(file_path)
+
+
+def initialize_faiss():
+    if not os.path.exists(EMBEDDINGS_PATH):
+        try:
+            os.makedirs(EMBEDDINGS_PATH)
+            print(f"Diretório de embeddings criado: {EMBEDDINGS_PATH}")
+        except Exception as e:
+            print(f"Erro ao criar diretório de embeddings {EMBEDDINGS_PATH}: {e}")
+            return False
+
+    index_path = os.path.join(EMBEDDINGS_PATH, 'embeddings.index')
+
+    if not os.path.exists(index_path):
+        try:
+            dimension = model.get_sentence_embedding_dimension()
+            index = faiss.IndexFlatL2(dimension)
+            faiss.write_index(index, index_path)
+            print(f"Novo índice FAISS criado e salvo em {index_path}")
+        except Exception as e:
+            print(f"Erro ao criar e salvar o índice FAISS inicial: {e}")
+            return False
+
+    print(f"FAISS inicializado com sucesso. Arquivo de índice: {index_path}")
+    return True
+
 def get_db_connection():
     if POSTGRESQL_URL:
         return psycopg2.connect(POSTGRESQL_URL)
@@ -120,6 +180,9 @@ def scan_and_process():
 
 if __name__ == '__main__':
     model = SentenceTransformer('all-MiniLM-L6-v2')
+
+    # Inicialize o FAISS antes de começar o processamento
+    initialize_faiss()
 
     with get_db_connection() as conn:
         with conn.cursor() as cur:

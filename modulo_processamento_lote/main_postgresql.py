@@ -62,6 +62,9 @@ def extract_text(file_path):
         return extract_text_odt(file_path)
     elif ext == '.md':
         return extract_text_md(file_path)
+    elif ext == 'txt':
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return file.read()
     else:
         print(f'Formato não suportado: {ext}')
         return None

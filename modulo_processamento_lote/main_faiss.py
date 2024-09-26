@@ -126,7 +126,11 @@ def store_embedding(file_path, embedding):
         index = faiss.IndexFlatL2(dimension)
 
     index.add(embedding.reshape(1, -1))
-    faiss.write_index(index, index_path)
+
+    if embedding.shape[0] == dimension:
+        faiss.write_index(index, index_path)
+    else:
+        print(f"Dimensão do embedding ({embedding.shape[0]}) não corresponde ao esperado ({dimension})")
 
     update_processed_files(file_path)
 

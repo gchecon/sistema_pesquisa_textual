@@ -28,8 +28,10 @@ CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', '500'))
 def addapt_numpy_array(numpy_array):
     return AsIs(f"ARRAY{numpy_array.tolist()}")
 
+
 def addapt_numpy_float32(numpy_float32):
     return AsIs(numpy_float32)
+
 
 register_adapter(np.float32, addapt_numpy_float32)
 register_adapter(np.ndarray, addapt_numpy_array)
@@ -67,7 +69,7 @@ def extract_text(file_path):
 
 def generate_embeddings(text):
     # Divide o texto em chunks
-    chunks = [text[i:i+CHUNK_SIZE] for i in range(0, len(text), CHUNK_SIZE)]
+    chunks = [text[i:i + CHUNK_SIZE] for i in range(0, len(text), CHUNK_SIZE)]
     embeddings = model.encode(chunks)
     return embeddings
 
@@ -88,7 +90,10 @@ def store_embeddings(file_path, embeddings):
             except Exception as e:
                 print(f"Erro ao armazenar embeddings para {file_path}: {e}")
                 print(f"Embedding causador do erro: {embedding}")
-                print(f"SQL gerado: {cur.mogrify('INSERT INTO document_embeddings (file_path, chunk_index, embedding) VALUES (%s, %s, %s::float4[])', (file_path, i, embedding))}")
+                print(
+                    f"SQL gerado: {cur.mogrify(
+                        'INSERT INTO document_embeddings (file_path, chunk_index, embedding) VALUES (%s, %s, %s::float4[])', 
+                        (file_path, i, embedding))}")
                 conn.rollback()
 
 
@@ -107,7 +112,6 @@ def process_file(file_path):
             print(f'Não foi possível extrair texto de {file_path}.')
     except Exception as e:
         print(f'Erro ao processar {file_path}: {e}')
-
 
 
 def calculate_file_hash(file_path):

@@ -1,0 +1,3 @@
+Eu sou um programador python experiente que desenvolve projetos e aplicações ah-hoc. Tenho 40 anos de experiência em programação, envolvendo desde as linguagens COBOL, até C++ e Pascal, além do Python. Conheço bem como funciona o pacote flask.
+
+Eu quero uma aplicação web que use as informações vetoriais e os metadados guardados pelo programa anexo, bem como um logotipo que está na pasta Imagens, a partir da raiz do projeto, com o nome Checon.png. A aplicação deve ter as informações de stilo (css) e a programação javascript separadas em diretórios próprios. A cor de fundo deve ter o rgb 88.6, 87.1, 80.4 e, as 

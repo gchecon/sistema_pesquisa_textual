@@ -1,3 +1,44 @@
 Eu sou um programador python experiente que desenvolve projetos e aplicações ah-hoc. Tenho 40 anos de experiência em programação, envolvendo desde as linguagens COBOL, até C++ e Pascal, além do Python. Conheço bem como funciona o pacote flask.
 
-Eu quero uma aplicação web que use as informações vetoriais e os metadados guardados pelo programa anexo, bem como um logotipo que está na pasta Imagens, a partir da raiz do projeto, com o nome Checon.png. A aplicação deve ter as informações de stilo (css) e a programação javascript separadas em diretórios próprios. A cor de fundo deve ter o rgb 88.6, 87.1, 80.4 e, as 
+Eu quero uma aplicação web que use as informações vetoriais e os metadados guardados pelo programa anexo, bem como um logotipo que está na pasta Imagens, com o nome Logo.png, a partir da raiz do projeto, com o nome Checon.png. A aplicação deve ter as informações de stilo (css) e a programação javascript separadas em diretórios próprios. A cor de fundo deve ter o rgb 88.6, 87.1, 80.4 e, as cores das letras e outros elementos devem ser de uma paleta que combine com esta cor de fundo. 
+
+A tela da aplicação deverá ser dividida em três partes. Uma barra horizontal superior, que ocupa toda a extensão horizontal do navegador e, abaixo dela, duas colunas, sendo que uma é uma barra lateral esquerda com as opções e a outra é maior e à direita onde se desenrolará as principais atividades da aplicação web, área que denomino como principal. Use as proporções das dimensões destes três elementos como normalmente é usado na Internet. O logotipo deverá ser posicionado à esquerda da barra superior horizontal, de dimensão proporcional. Quando iniciada a aplicação web, o logotipo deverá aparecer centrado na área principa.
+
+Por ora, na barra lateral esquerda, deverá haver um menu com as seguintes opções alinhadas com a parte superior: 
+
+"Tema"
+"Modelo LLM" 
+"Verbosidade"
+
+Por ora, alinhada à parte inferior da barra lateral esquerda, deverá haver
+
+"Configurações"
+
+Quando se clicar em "Tema", deverá surgir um menu para os assuntos tratados, que no primeiro momento deverão ser "Anarquismo" e "Táquions".
+Quando se clicar em "Modelo LLM", será apresentado um menu com os nomes dos modelos LLM e SLM do Llama 3.
+Quando se clicar em "Verbosidade", haverá as opções "Concisa" ou "Prolixa". 
+
+Cada uma destas escolhas devem ser mostradas com certo espaço abaixo do menu principal que contém "Tema", "Modelo LLM" e "Verbosidade". Abaixo, deverá haver um botão com o texto "Iniciar". Ao se clicar neste botão, aparecerá na área principal dos espaços, como no ChatGPT: um para se colocar os prompts e outro onde as respostas serão mostradas. Toda vez que um prompt é feito, ele aparece na área de respostas em destaque. O aplicativo usa o prompt e o contexto adequado (com memória sempre limitando ao máximo do contexto do modelo - descartando prioritariamente as partes mais antigas do contexto para caber no limite). Considere daí o modelo RAG, ou seja, uma pesquisa de aproximação vetorial com os embeddings gerados no programa anexo, a formação do contexto, o envio para um modelo local, e a resposta colocada na área.
+
+Este é um início que será aprimorado posteriormente. Use os padrões de distribuição conforme os principais modelos da internet e informe na aplicação onde devo inserir códigos para o tratamento das informações conforme seleção dos menus. A aplicação deve ser responsiva, com utilização em navegadores de desktop, tablets e celulares.
+
+------------
+
+Há vários pontos a acertar:
+
+1. O botão inicial deve estar na barra lateral à esquerda.
+2. O logotipo na área principal dever estar centralizado tanto horizontal, quanto verticalmente.
+3. As cores de fundo estão muito fortes e não correspondem a uma paleta que combina com o RGB 88.6, 87.1, 80.4. Vou simplificar e pedir o RGB 88, 87, 80, mas peço que as cores de fundo da barra horizontal superior e da barra lateral esquerda seja suaves variações deste RGB e que as letras combinem com esta cor.
+4. Os subtemas da barra lateral somente devem aparecer quando clicados no tema.
+5. A escolha não é do tema, mas de cada subtema. Cada escolha, clique no subtema, deve ser mostrado na barra lateral esquerda mais abaixo. 
+6. Só aceite o click no botão iniciar quando os três subtemas tiverem sido escolhidos, caso contrário, mostre uma mensagem de erro dizendo que é necessário escolher os subtemas. Esta mensagem pode ser uma janela a parte, ou estar escrita mais abaixo da barra lateral esquerda.
+7. Quando se clica no botão iniciar, o logo da área principal desaparece e a interação deve começar.
+
+------------------
+
+Mais uns pontos de ajustes.
+
+1. Quando clico no botão "Iniciar", nada acontece. O que deveria acontecer é que a área para inserir o prompr, junto com o registro dos prompts e respostas, deveria aparecer na área principal, ou seja, o logo some e aparece estes componentes. Além disso, quando clico no botão sem a escolha dos submenus do "Tema", "Modelo LLM" e "Verbosidade", não aparece a mensagem de erro.
+2. Quando clico em "Tema", "Modelo LLM" e "Verbosidade", não aparecem os submenus para que eu clique e selecione os subtemas. 
+
+

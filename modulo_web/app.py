@@ -13,6 +13,7 @@ def index():
 def process_prompt():
     data = request.json
     # Aqui você pode adicionar a lógica para aproximar vetores e gerar resposta usando o modelo RAG.
+    print(f'Dados Recebidos: \n{data}')
     return jsonify({"response": "Resposta gerada será inserida aqui"})
 
 if __name__ == '__main__':

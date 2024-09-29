@@ -56,6 +56,12 @@ function atualizarSubtemasEscolhidos() {
 
 // Lógica para iniciar a interação
 document.getElementById('start-button').addEventListener('click', function() {
+    // Capturar valores selecionados nos menus
+    console.log(subtemasSelecionados.tema)
+    console.log(subtemasSelecionados.modelo)
+    console.log(subtemasSelecionados.verbosidade)
+    // Valida se os submenus foram selecionados e, se sim, habilita o botão de iniciar a interação
+    // Caso contrário, exibe a mensagem de erro e desabilita o botão de iniciar a interação
     if (subtemasSelecionados.tema && subtemasSelecionados.modelo && subtemasSelecionados.verbosidade) {
         // Esconde o logo e mostra a área de prompts
         document.getElementById('main-logo').style.display = 'none';

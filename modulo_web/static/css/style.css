@@ -1,13 +1,20 @@
+/* Garante que o conteúdo não transborde da tela */
 body {
     margin: 0;
     padding: 0;
     font-family: Arial, sans-serif;
-    background-color: rgb(88, 87, 80);
+    background-color: #baa87e;
+    overflow-x: hidden;  /* Impede rolagem horizontal */
+}
+
+/* Garante que o padding e a borda sejam incluídos no cálculo da largura */
+* {
+    box-sizing: border-box;
 }
 
 .top-bar {
     width: 100%;
-    background-color: rgb(85, 84, 75);  /* Variação suave da cor de fundo */
+    background-color: #a29169;  /* Variação suave da cor de fundo */
     color: white;
     display: flex;
     align-items: center;
@@ -20,12 +27,12 @@ body {
 
 .main-layout {
     display: flex;
-    height: calc(100vh - 70px);
+    height: 100vh;  /* Ajusta para usar toda a altura da viewport */
 }
 
 .sidebar {
     width: 250px;
-    background-color: rgb(83, 82, 72);  /* Variação suave da cor de fundo */
+    background-color: #73643e;  /* Variação suave da cor de fundo */
     color: white;
     display: flex;
     flex-direction: column;
@@ -48,6 +55,27 @@ body {
     padding-left: 20px;
 }
 
+/* Estilo padrão dos links de menu */
+#tema-menu,
+#modelo-menu,
+#verbosidade-menu {
+    color: #FFFF00; /* Amarelo */
+    text-decoration: none; /* Remove o sublinhado */
+}
+
+/* Estilo para o menu selecionado */
+#tema-menu.selecionado,
+#modelo-menu.selecionado,
+#verbosidade-menu.selecionado {
+    color: #CCCC00; /* Amarelo mais escuro */
+}
+
+/* Estilo para as opções do submenu */
+.subtema-option {
+    color: #FFFFFF; /* Branco */
+    text-decoration: none; /* Remove o sublinhado */
+}
+
 .chosen-subjects {
     margin-top: 20px;
 }
@@ -64,22 +92,21 @@ body {
 
 .main-area {
     flex-grow: 1;
-    background-color: white;
+    background-color: #baa87e;
     padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    overflow-y: auto;  /* Permite rolagem apenas se o conteúdo ultrapassar a altura */
 }
 
-.logo-center img {
-    width: 200px;
-}
-
+/* Área do prompt */
 #prompt-area {
-    width: 100%;
-    max-width: 600px;
-    margin-top: 20px;
+    width: 80%;  /* Define que a largura será 80% da área disponível */
+    max-width: 800px;  /* Limita a largura máxima */
+    margin: 20px auto;  /* Centraliza horizontalmente */
+    padding-top: 20px;
 }
 
 textarea {
@@ -89,8 +116,13 @@ textarea {
     margin-bottom: 10px;
 }
 
+/* Área de resposta */
 #response-area {
-    margin-top: 20px;
-    border-top: 1px solid #ddd;
+    width: 80%;  /* Define que a largura será 80% da área disponível */
+    max-width: 800px;  /* Limita a largura máxima */
+    height: 50vh;  /* Define que a altura será 50% da altura da viewport */
+    overflow-y: auto;  /* Mantém a rolagem vertical se o conteúdo exceder o espaço */
+    margin: 20px auto;  /* Centraliza horizontalmente */
+    border-top: 1px solid #ddd;  /* Adiciona uma borda superior */
     padding-top: 10px;
 }

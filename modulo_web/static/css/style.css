@@ -14,30 +14,37 @@ body {
 
 .top-bar {
     width: 100%;
-    background-color: #a29169;  /* Variação suave da cor de fundo */
+    background-color: #a29169;
     color: white;
     display: flex;
     align-items: center;
     padding: 10px;
+    height: 60px;  /* Defina a altura exata da barra superior */
+    box-sizing: border-box;
 }
 
 .logo {
     height: 50px;
 }
 
+/* Layout flexbox para o layout principal */
 .main-layout {
     display: flex;
-    height: 100vh;  /* Ajusta para usar toda a altura da viewport */
+    flex-direction: row;
+    height: calc(100vh - 60px);  /* Usar a altura total menos a barra superior */
+    box-sizing: border-box;
 }
 
 .sidebar {
-    width: 250px;
-    background-color: #73643e;  /* Variação suave da cor de fundo */
-    color: white;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 20px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    background-color: #73643e;
+    flex-shrink: 0;  /* Impede a barra lateral de encolher */
+    width: 250px;  /* Largura fixa da barra lateral */
+    overflow: hidden;
 }
 
 .sidebar ul {
@@ -53,6 +60,26 @@ body {
     display: none;
     list-style: none;
     padding-left: 20px;
+}
+
+.sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: auto;
+    padding-bottom: 10px;
+}
+
+/* Estilo para o link Configurações */
+#configuracoes-link {
+    color: #FFFF00; /* Amarelo */
+    text-decoration: none; /* Remove o sublinhado */
+    margin-top: 10px;
+}
+
+/* Estilo para o link Configurações quando selecionado */
+#configuracoes-link.selecionado {
+    color: #CCCC00; /* Amarelo mais escuro */
 }
 
 /* Estilo padrão dos links de menu */
@@ -98,7 +125,8 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    overflow-y: auto;  /* Permite rolagem apenas se o conteúdo ultrapassar a altura */
+    overflow-y: auto;
+    box-sizing: border-box;  /* Garantir que padding seja incluído */
 }
 
 /* Área do prompt */
@@ -125,4 +153,15 @@ textarea {
     margin: 20px auto;  /* Centraliza horizontalmente */
     border-top: 1px solid #ddd;  /* Adiciona uma borda superior */
     padding-top: 10px;
+}
+
+/* Estilo para o link Configurações */
+#configuracoes-link {
+    color: #FFFF00; /* Amarelo */
+    text-decoration: none; /* Remove o sublinhado */
+}
+
+/* Estilo para o link Configurações quando selecionado */
+#configuracoes-link.selecionado {
+    color: #CCCC00; /* Amarelo mais escuro */
 }

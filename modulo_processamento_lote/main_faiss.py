@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 import tkinter as tk
 from tkinter import simpledialog
+import logging
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from extratores.docx import extract_text_docx
@@ -23,6 +24,10 @@ EMBEDDINGS_PATH = os.getenv('EMBEDDINGS_PATH', './embeddings')
 THREADS_COUNT = int(os.getenv('THREADS_COUNT', '4'))
 POSTGRESQL_URL = os.getenv('POSTGRESQL_URL')
 MODEL = os.getenv('MODEL_EMBEDDING')
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'ERROR').upper()
+
+logging.basicConfig(level=getattr(logging, LOG_LEVEL))
+logger = logging.getLogger(__name__)
 
 
 def initialize_faiss():
@@ -76,8 +81,11 @@ def process_file(file_path):
 
 
 def get_db_connection():
+    logger.debug("Tentando estabelecer conexão com o banco de dados")
     if POSTGRESQL_URL:
-        return psycopg2.connect(POSTGRESQL_URL)
+        conn = psycopg2.connect(POSTGRESQL_URL)
+        logger.debug("Conexão estabelecida com sucesso")
+        return conn
     else:
         root = tk.Tk()
         root.withdraw()

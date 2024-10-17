@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checon - Aplicação Web</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Barra superior -->
+    <header class="top-bar">
+        <img src="{{ url_for('static', filename='images/Checon.png') }}" alt="Logotipo" class="logo">
+    </header>
+
+    <!-- Conteúdo principal -->
+    <div class="main-layout">
+        <!-- Barra lateral -->
+        <nav class="sidebar">
+            <ul>
+                <li><a href="#" id="tema-menu">Tema</a></li>
+                <ul id="tema-submenu" class="submenu">
+                    <li><a href="#" class="subtema-option">Anarquismo</a></li>
+                    <li><a href="#" class="subtema-option">Táquions</a></li>
+                </ul>
+                <li><a href="#" id="modelo-menu">Modelo LLM</a></li>
+                <ul id="modelo-submenu" class="submenu">
+                    <li><a href="#" class="subtema-option">Llama 3 LLM</a></li>
+                    <li><a href="#" class="subtema-option">Llama 3 SLM</a></li>
+                </ul>
+                <li><a href="#" id="verbosidade-menu">Verbosidade</a></li>
+                <ul id="verbosidade-submenu" class="submenu">
+                    <li><a href="#" class="subtema-option">Concisa</a></li>
+                    <li><a href="#" class="subtema-option">Prolixa</a></li>
+                </ul>
+            </ul>
+
+            <div id="subtema-selecionado" class="chosen-subjects">
+                <!-- Mostra os subtemas escolhidos -->
+            </div>
+
+        <!-- Parte inferior da barra lateral -->
+            <div class="sidebar-footer">
+                <button id="start-button" class="disabled">Iniciar</button>
+                <a href="#" id="configuracoes-link">Configurações</a>
+            </div>
+
+        </nav>
+
+        <!-- Área principal -->
+        <main class="main-area">
+            <div class="logo-center" id="main-logo">
+                <img src="{{ url_for('static', filename='images/Checon.png') }}" alt="Logotipo Checon">
+            </div>
+
+            <div id="prompt-area" style="display:none;">
+                <textarea id="prompt-input" placeholder="Digite seu prompt..."></textarea>
+                <button id="send-prompt">Enviar</button>
+                <div id="response-area"></div>
+            </div>
+
+            <!-- Área de erro adicionada aqui -->
+            <div id="error-message" style="display:none; color:black; text-align:center; margin-top: 20px;">
+                <!-- O texto de erro será inserido aqui pelo JavaScript -->
+            </div>
+
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 import tkinter as tk
 from tkinter import simpledialog
+import logging
+import datetime
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from extratores.docx import extract_text_docx
@@ -21,51 +23,16 @@ DOCUMENTS_PATH = os.getenv('DOCUMENTS_PATH', './documents')
 EMBEDDINGS_PATH = os.getenv('EMBEDDINGS_PATH', './embeddings')
 THREADS_COUNT = int(os.getenv('THREADS_COUNT', '4'))
 POSTGRESQL_URL = os.getenv('POSTGRESQL_URL')
+MODEL = os.getenv('MODEL_EMBEDDING')
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'ERROR').upper()
 
-
-def store_embedding(file_path, embedding):
-    dimension = embedding.shape[0]
-    if not os.path.exists(EMBEDDINGS_PATH):
-        try:
-            os.makedirs(EMBEDDINGS_PATH)
-            print(f"Diretório criado: {EMBEDDINGS_PATH}")
-        except Exception as e:
-            print(f"Erro ao criar diretório {EMBEDDINGS_PATH}: {e}")
-            return
-
-    index_path = os.path.join(EMBEDDINGS_PATH, 'embeddings.index')
-
-    try:
-        if os.path.exists(index_path):
-            index = faiss.read_index(index_path)
-            print(f"Índice existente carregado de {index_path}")
-        else:
-            index = faiss.IndexFlatL2(dimension)
-            print(f"Novo índice criado com dimensão {dimension}")
-
-        index.add(embedding.reshape(1, -1))
-
-        try:
-            faiss.write_index(index, index_path)
-            print(f"Índice salvo em {index_path}")
-        except Exception as e:
-            print(f"Erro ao escrever o índice em {index_path}: {e}")
-            print(f"Permissões do diretório: {os.stat(EMBEDDINGS_PATH)}")
-
-    except Exception as e:
-        print(f"Erro ao manipular o índice FAISS: {e}")
-
-    update_processed_files(file_path)
-
+logging.basicConfig(level=getattr(logging, LOG_LEVEL))
+logger = logging.getLogger(__name__)
 
 def initialize_faiss():
     if not os.path.exists(EMBEDDINGS_PATH):
-        try:
-            os.makedirs(EMBEDDINGS_PATH)
-            print(f"Diretório de embeddings criado: {EMBEDDINGS_PATH}")
-        except Exception as e:
-            print(f"Erro ao criar diretório de embeddings {EMBEDDINGS_PATH}: {e}")
-            return False
+        os.makedirs(EMBEDDINGS_PATH)
+        print(f"Diretório de embeddings criado: {EMBEDDINGS_PATH}")
 
     index_path = os.path.join(EMBEDDINGS_PATH, 'embeddings.index')
 
@@ -82,9 +49,26 @@ def initialize_faiss():
     print(f"FAISS inicializado com sucesso. Arquivo de índice: {index_path}")
     return True
 
+
+def generate_embedding(text):
+    return model.encode(text)
+
+
+def store_embedding(file_path, embedding):
+    index_path = os.path.join(EMBEDDINGS_PATH, 'embeddings.index')
+    index = faiss.read_index(index_path)
+    index.add(embedding.reshape(1, -1))
+    faiss.write_index(index, index_path)
+
+    update_processed_files(file_path, embedding)
+
+
 def get_db_connection():
+    logger.debug("Tentando estabelecer conexão com o banco de dados")
     if POSTGRESQL_URL:
-        return psycopg2.connect(POSTGRESQL_URL)
+        conn_inner = psycopg2.connect(POSTGRESQL_URL)
+        logger.debug("Conexão estabelecida com sucesso")
+        return conn_inner
     else:
         root = tk.Tk()
         root.withdraw()
@@ -96,6 +80,7 @@ def get_db_connection():
             password=password
         )
 
+
 def extract_text(file_path):
     ext = Path(file_path).suffix.lower()
     if ext == '.pdf':
@@ -106,36 +91,51 @@ def extract_text(file_path):
         return extract_text_odt(file_path)
     elif ext == '.md':
         return extract_text_md(file_path)
-    elif ext == 'txt':
+    elif ext == '.txt':
         with open(file_path, 'r', encoding='utf-8') as file:
             return file.read()
     else:
         print(f'Formato não suportado: {ext}')
         return None
 
-def generate_embedding(text):
-    embedding = model.encode(text)
-    return embedding
 
-def store_embedding(file_path, embedding):
-    dimension = embedding.shape[0]
-    if not os.path.exists(EMBEDDINGS_PATH):
-        os.makedirs(EMBEDDINGS_PATH)
-    index_path = os.path.join(EMBEDDINGS_PATH, 'embeddings.index')
+def calculate_file_hash(file_path):
+    hasher = hashlib.md5()
+    with open(file_path, 'rb') as f:
+        buf = f.read()
+        hasher.update(buf)
+    return hasher.hexdigest()
 
-    if os.path.exists(index_path):
-        index = faiss.read_index(index_path)
-    else:
-        index = faiss.IndexFlatL2(dimension)
 
-    index.add(embedding.reshape(1, -1))
+def is_duplicate(file_path):
+    file_hash = calculate_file_hash(file_path)
+    with get_db_connection() as conn_test:
+        with conn_test.cursor() as cur_test:
+            cur_test.execute('SELECT 1 FROM files_processed WHERE file_hash = %s', (file_hash,))
+            return cur.fetchone() is not None
 
-    if embedding.shape[0] == dimension:
-        faiss.write_index(index, index_path)
-    else:
-        print(f"Dimensão do embedding ({embedding.shape[0]}) não corresponde ao esperado ({dimension})")
-
-    update_processed_files(file_path)
+def update_processed_files(file_path, embedding):
+    file_hash = calculate_file_hash(file_path)
+    file_name = os.path.basename(file_path)
+    creation_time = os.path.getctime(file_path)
+    creation_date = datetime.datetime.fromtimestamp(creation_time)
+    
+    with open(file_path, 'rb') as file:
+        file_content = file.read()
+    
+    with get_db_connection() as conn_main:
+        with conn_main.cursor() as cur_main:
+            cur_main.execute('''
+                INSERT INTO files_processed 
+                (file_path, file_name, file_hash, creation_date, file_content, embedding_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (file_path) DO UPDATE
+                SET file_hash = EXCLUDED.file_hash,
+                    creation_date = EXCLUDED.creation_date,
+                    file_content = EXCLUDED.file_content,
+                    embedding_id = EXCLUDED.embedding_id
+            ''', (file_path, file_name, file_hash, creation_date, psycopg2.Binary(file_content), embedding.tobytes()))
+        conn_main.commit()
 
 def process_file(file_path):
     try:
@@ -146,35 +146,13 @@ def process_file(file_path):
         if text:
             embedding = generate_embedding(text)
             store_embedding(file_path, embedding)
+            update_processed_files(file_path, embedding)
             print(f'Arquivo processado: {file_path}')
         else:
             print(f'Não foi possível extrair texto de {file_path}.')
     except Exception as e:
         print(f'Erro ao processar {file_path}: {e}')
 
-def calculate_file_hash(file_path):
-    hasher = hashlib.md5()
-    with open(file_path, 'rb') as f:
-        buf = f.read()
-        hasher.update(buf)
-    return hasher.hexdigest()
-
-def is_duplicate(file_path):
-    file_hash = calculate_file_hash(file_path)
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute('SELECT 1 FROM files_processed WHERE file_hash = %s', (file_hash,))
-            return cur.fetchone() is not None
-
-def update_processed_files(file_path):
-    file_hash = calculate_file_hash(file_path)
-    with get_db_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                'INSERT INTO files_processed (file_path, file_hash) VALUES (%s, %s) ON CONFLICT (file_path) DO NOTHING',
-                (file_path, file_hash)
-            )
-        conn.commit()
 
 def scan_and_process():
     files = []
@@ -186,10 +164,12 @@ def scan_and_process():
         executor.map(process_file, files)
 
 if __name__ == '__main__':
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    model = SentenceTransformer(MODEL)
 
     # Inicialize o FAISS antes de começar o processamento
-    initialize_faiss()
+    if not initialize_faiss():
+        print("Falha na inicialização do FAISS. O programa será encerrado.")
+        sys.exit(1)
 
     with get_db_connection() as conn:
         with conn.cursor() as cur:
@@ -197,7 +177,11 @@ if __name__ == '__main__':
                 CREATE TABLE IF NOT EXISTS files_processed (
                     id SERIAL PRIMARY KEY,
                     file_path TEXT UNIQUE,
+                    file_name TEXT,
                     file_hash TEXT,
+                    creation_date TIMESTAMP,
+                    file_content BYTEA,
+                    embedding_id BYTEA,
                     processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ''')
